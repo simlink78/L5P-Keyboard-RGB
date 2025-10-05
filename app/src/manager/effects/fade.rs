@@ -39,7 +39,7 @@ pub fn play(manager: &mut Inner, p: &Profile) {
     while !manager.stop_signals.manager_stop_signal.load(Ordering::SeqCst) {
         if state.get_keys().is_empty() {
             if now.elapsed() > Duration::from_secs(20 / u64::from(p.speed)) {
-                manager.keyboard.transition_colors_to(&[0; 12], 230, 3).unwrap();
+                manager.keyboard.set_colors_to(&[0; 12]).unwrap();
             } else {
                 thread::sleep(Duration::from_millis(20));
             }
