@@ -1,0 +1,63 @@
+# This GitHub Actions workflow compiles a Rust project into a static Linux binary
+# and creates a GitHub Release when a new tag is pushed.
+
+name: Static Rust Build & Release
+
+on:
+  push:
+    branches: [ '**' ] # Trigger on pushes to any branch
+    tags: [ 'v*.*.*' ] # Trigger on version tags like v1.0.0
+  pull_request:
+    branches: [ '**' ] # Trigger on pull requests targeting any branch
+  workflow_dispatch: # Allows manual triggering from the GitHub UI
+
+jobs:
+  build-static-binary:
+    name: Build Static Linux Binary
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the repository's code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Set up a cross-compilation environment for the musl target.
+      # This action correctly configures the toolchain and pkg-config.
+      # The `packages` input installs required C libraries for the target.
+      # Your app needs additional dependencies for screen capture and graphics processing
+      - name: Setup musl toolchain
+        uses: rust-cross/rust-toolchain-action@v1
+        with:
+          target: x86_64-unknown-linux-musl
+          # Required packages for your dependencies (scrap, photon-rs, device_query)
+          packages: glib-dev libx11-dev libxrandr-dev libxss-dev libgtk-3-dev pkg-config
+          
+      # 3. Build the application in release mode for the musl target.
+      # Building from the app directory since that's where your Cargo.toml is
+      - name: Build static binary
+        working-directory: ./app
+        run: cargo build --release --target=x86_64-unknown-linux-musl
+
+      # 4. Verify that the resulting binary is statically linked.
+      # The `ldd` command will output "not a dynamic executable".
+      - name: Verify static linking
+        working-directory: ./app
+        run: |
+          ldd ./target/x86_64-unknown-linux-musl/release/legion-kb-rgb
+
+      # 5. Upload the compiled binary as a build artifact.
+      # This allows you to download the binary from the Actions run summary.
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: legion-kb-rgb-static-${{ github.sha }}
+          path: ./app/target/x86_64-unknown-linux-musl/release/legion-kb-rgb
+          
+      # 6. Create a GitHub Release if the workflow was triggered by a tag.
+      # This step attaches the compiled binary directly to the release page.
+      - name: Create Release and Upload Binary
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./app/target/x86_64-unknown-linux-musl/release/legion-kb-rgb
