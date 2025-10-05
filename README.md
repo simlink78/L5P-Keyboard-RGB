@@ -22,9 +22,10 @@
     - [At a glance](#at-a-glance)
     - [File sections](#file-sections)
 - [Usage](#usage)
-  - [Format](#format)
-  - [With GUI](#with-gui)
-  - [Via the command line](#via-the-command-line)
+  - [udev Rule Format](#udev-rule-format)
+  - [Command Line Interface](#command-line-interface)
+  - [Configuration](#configuration)
+  - [Examples](#examples)
 - [Compatibility](#compatibility)
   - ["How about X model"](#how-about-x-model)
 - [Building from source](#building-from-source)
@@ -90,7 +91,7 @@ The best way to add a new effect is to directly edit the source code, as it allo
 
 **Note**: By default, on Linux you will have to run the program with root privileges, however, you can remedy this by adding the following `udev` rule (in a path similar to `/etc/udev/rules.d/99-kblight.rules`):
 
-### Format
+### udev Rule Format
 
 ```sh
 SUBSYSTEM=="usb", ATTR{idVendor}=="048d", ATTR{idProduct}=="####", MODE="0666"
@@ -115,38 +116,69 @@ And then reloading the rules:
 sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
-### With GUI
+### Command Line Interface
 
-Execute the file by double-clicking on it. You may pass extra startup options via the CLI by also specifying the `--gui` flag.
-
-Configuration for this mode is saved by default on the folder the program was executed in a file called `settings.json`, you can override this location by setting the `LEGION_KEYBOARD_CONFIG` environment variable.
-
-### Via the command line
+This is a CLI-only application. All functionality is accessed via command line arguments.
 
 Usage:
 
 ```sh
-legion-kb-rgb [OPTIONS] [SUBCOMMAND]
+legion-kb-rgb <SUBCOMMAND>
 ```
 
-Examples:
+### Configuration
 
-- Getting the help prompt
+You can save profiles and custom effects to files for easy reuse:
+- Profiles can be saved using the `--save` flag with the `set` command
+- Profiles can be loaded using the `load-profile` command
+- Custom effects can be loaded using the `custom-effect` command
+
+The `LEGION_KEYBOARD_CONFIG` environment variable can be set to specify a custom location for the settings file (default: `./settings.json`).
+
+See `example-profile.json` and `example-custom-effect.json` in the repository for configuration file examples.
+
+### Examples
+
+- Getting the help prompt:
 
 ```sh
 legion-kb-rgb --help
 ```
 
-- Setting the keyboard to red
+- List all available effects:
+
+```sh
+legion-kb-rgb list
+```
+
+- Setting the keyboard to red:
 
 ```sh
 legion-kb-rgb set -e Static -c 255,0,0,255,0,0,255,0,0,255,0,0
 ```
 
-- Using the SmoothWave effect going to the left with speed `4` and brightness at high
+- Using the SmoothWave effect going to the left with speed `4` and brightness at high:
 
 ```sh
 legion-kb-rgb set -e SmoothWave -s 4 -b 2 -d Left
+```
+
+- Saving a profile to a file:
+
+```sh
+legion-kb-rgb set -e Static -c 255,0,0,255,0,0,255,0,0,255,0,0 --save my-profile.json
+```
+
+- Loading a profile from a file:
+
+```sh
+legion-kb-rgb load-profile -p my-profile.json
+```
+
+- Loading a custom effect from a file:
+
+```sh
+legion-kb-rgb custom-effect -p my-effect.json
 ```
 
 ## Compatibility
