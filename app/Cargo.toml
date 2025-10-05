@@ -15,6 +15,9 @@ legion-rgb-driver = { path = "../driver" }
 # Cli
 clap = { version = "4.5.37", features = ["color", "cargo", "derive"] }
 
+# Keyboard and mouse grabbing
+device_query = "4.0.1"
+
 # AmbientLight effect
 scrap = { git = "https://github.com/rustdesk/rustdesk", rev = "c626c24", features = [
     "wayland",
